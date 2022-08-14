@@ -14,13 +14,25 @@ class Block:
             pygame.draw.rect(screen, (0, 100, 100), pygame.Rect(self.x, self.y, self.w, self.h))
 
 
+class Player:
+    def __init__(self, x, y):
+        self.x, self.y = x, y
+        self.r = 20
+        self.color = (100, 0, 100)
+
+    def draw(self):
+        pygame.draw.circle(screen, self.color, (self.x, self.y), self.r)
+
+    def move(self, dx, dy):
+        self.x += dx
+        self.y += dy
+
+
 pygame.init()
 screen = pygame.display.set_mode((800, 600))
 pygame.display.set_caption("Platform")
 
-player_color = (100, 0, 100)
-player_x, player_y = (400, 300)
-player_radius = 20
+player = Player(400, 300)
 
 blocks = []
 
@@ -34,19 +46,19 @@ while True:
     keys = pygame.key.get_pressed()
 
     if keys[pygame.K_UP]:
-        player_y -= 4
+        player.move(0, -4)
     if keys[pygame.K_DOWN]:
-        player_y += 4
+        player.move(0, 4)
     if keys[pygame.K_LEFT]:
-        player_x -= 4
+        player.move(-4, 0)
     if keys[pygame.K_RIGHT]:
-        player_x += 4
+        player.move(4, 0)
 
     screen.fill((100, 100, 100))
 
-    pygame.draw.circle(screen, player_color, (player_x, player_y), player_radius)
-
     for b in blocks:
         b.draw()
+
+    player.draw()
 
     pygame.display.flip()
