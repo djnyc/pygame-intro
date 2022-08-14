@@ -7,11 +7,12 @@ class Block:
     def __init__(self, x, y, w, h):
         self.x, self.y = x, y
         self.w, self.h = w, h
+        self.rect = pygame.Rect(self.x, self.y, self.w, self.h)
 
     def draw(self):
         w, h = screen.get_size()
         if self.x + self.w > 0 and self.x < w and self.y + self.h > 0 and self.y < h:
-            pygame.draw.rect(screen, (0, 100, 100), pygame.Rect(self.x, self.y, self.w, self.h))
+            pygame.draw.rect(screen, (0, 100, 100), self.rect)
 
 
 class Player:
@@ -37,7 +38,21 @@ player = Player(400, 300)
 blocks = []
 
 for i in range(100):
-    blocks.append(Block(r.randint(-1000, 1000), r.randint(-1000, 1000), r.randint(20, 200), r.randint(100, 150)))
+    looking = True
+
+    while looking:
+        bx, by = r.randint(-1000, 1000), r.randint(-1000, 1000)
+        w, h = r.randint(20, 200), r.randint(100, 150)
+
+        next_block = Block(bx, by, w, h)
+
+        if blocks and next_block.rect.collidelist([b.rect for b in blocks]) != -1:
+            looking = True
+        else:
+            looking = False
+
+    blocks.append(next_block)
+
 
 while True:
     if pygame.event.get(pygame.QUIT):
