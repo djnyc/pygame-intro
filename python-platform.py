@@ -20,36 +20,39 @@ class Block:
 
 class Player:
     def __init__(self, x, y):
-        self.x, self.y = x, y
         self.vx, self.vy = 0, 0
-        self.r = 20
+        self.rect = pygame.Rect(x, y, 20, 20)
         self.color = (100, 0, 100)
-        self.g = 2
-        self.rect = None
+        self.g = 1
         self.ox, self.oy = None, None
 
     def draw(self):
-        self.rect = pygame.draw.circle(screen, self.color, (self.x - viewport.x, self.y - viewport.y), self.r)
+        new_rect = self.rect.move(-viewport.x, -viewport.y)
+
+        pygame.draw.rect(screen, self.color, new_rect)
 
     def move(self, dx, dy):
-        self.vx = dx
-        self.vy = dy
+        self.vx += dx
+        self.vy += dy
+
+        if self.vy < -8:
+            self.vy = -8
+
 
     def update(self):
 
-        self.ox, self.oy = self.x, self.y
+        self.ox, self.oy = self.rect.topleft
 
-        self.x += self.vx
-        self.y += self.vy
+        self.rect.move_ip(self.vx, self.vy)
 
         self.vx = 0
         self.vy += self.g
 
+
     def revert(self):
-        self.x = self.ox
-        self.y = self.oy
-        self.vx = 0
-        self.vy = 0
+        self.rect.x, self.rect.y = self.ox, self.oy
+
+        self.vx, self.vy = 0, 0
 
 
 class Viewport:
@@ -60,18 +63,20 @@ class Viewport:
     def move(self, player):
         w, h = screen.get_size()
 
-        if player.x - self.x < self.envelope:
-            self.x += player.x - self.x - self.envelope
-        if player.x - self.x > w - self.envelope:
-            self.x += player.x - self.x - (w - self.envelope)
-        if player.y - self.y < self.envelope:
-            self.y += player.y - self.y - self.envelope
-        if player.y - self.y > h - self.envelope:
-            self.y += player.y - self.y - (h - self.envelope)
+        px, py = player.rect.topleft
 
+        if px - self.x < self.envelope:
+            self.x += px - self.x - self.envelope
+        if px - self.x > w - self.envelope:
+            self.x += px - self.x - (w - self.envelope)
+        if py - self.y < self.envelope:
+            self.y += py - self.y - self.envelope
+        if py - self.y > h - self.envelope:
+            self.y += py - self.y - (h - self.envelope)
 
 
 pygame.init()
+
 screen = pygame.display.set_mode((800, 600))
 
 viewport = Viewport()
@@ -86,12 +91,14 @@ for i in range(100):
     looking = True
 
     while looking:
-        bx, by = r.randint(-1000, 1000), r.randint(-1000, 1000)
-        w, h = r.randint(20, 200), r.randint(100, 150)
+        bx, by = r.randint(-10, 10) * 100, r.randint(-10, 10) * 100
+        w, h = r.randint(2, 4) * 50, 50
 
         next_block = Block(bx, by, w, h)
 
         if blocks and next_block.rect.collidelist([b.rect for b in blocks]) != -1:
+            looking = True
+        elif next_block.rect.colliderect(player.rect):
             looking = True
         else:
             looking = False
@@ -106,26 +113,26 @@ while True:
     keys = pygame.key.get_pressed()
 
     if keys[pygame.K_UP]:
-        player.move(0, -1)
+        player.move(0, -4)
     if keys[pygame.K_DOWN]:
-        player.move(0, 1)
+        player.move(0, 4)
     if keys[pygame.K_LEFT]:
-        player.move(-1, 0)
+        player.move(-4, 0)
     if keys[pygame.K_RIGHT]:
-        player.move(1, 0)
+        player.move(4, 0)
 
     viewport.move(player)
 
     screen.fill((100, 100, 100))
 
-    for b in blocks:
-        b.draw()
-
-    player.draw()
-
     player.update()
 
     if player.rect.collidelist([b.rect for b in blocks]) != -1:
         player.revert()
+
+    for b in blocks:
+        b.draw()
+
+    player.draw()
 
     pygame.display.flip()
