@@ -11,8 +11,11 @@ class Block:
 
     def draw(self):
         w, h = screen.get_size()
-        if self.x + self.w > 0 and self.x < w and self.y + self.h > 0 and self.y < h:
-            pygame.draw.rect(screen, (0, 100, 100), self.rect)
+
+        new_rect = self.rect.move(-viewport.x, -viewport.y)
+
+        if new_rect.colliderect(screen.get_rect()):
+            pygame.draw.rect(screen, (0, 100, 100), new_rect)
 
 
 class Player:
@@ -22,15 +25,36 @@ class Player:
         self.color = (100, 0, 100)
 
     def draw(self):
-        pygame.draw.circle(screen, self.color, (self.x, self.y), self.r)
+        pygame.draw.circle(screen, self.color, (self.x - viewport.x, self.y - viewport.y), self.r)
 
     def move(self, dx, dy):
         self.x += dx
         self.y += dy
 
+class Viewport:
+    def __init__(self):
+        self.x, self.y = 0, 0
+        self.envelope = 80
+
+    def move(self, player):
+        w, h = screen.get_size()
+
+        if player.x - self.x < self.envelope:
+            self.x += player.x - self.x - self.envelope
+        if player.x - self.x > w - self.envelope:
+            self.x += player.x - self.x - (w - self.envelope)
+        if player.y - self.y < self.envelope:
+            self.y += player.y - self.y - self.envelope
+        if player.y - self.y > h - self.envelope:
+            self.y += player.y - self.y - (h - self.envelope)
+
+
 
 pygame.init()
 screen = pygame.display.set_mode((800, 600))
+
+viewport = Viewport()
+
 pygame.display.set_caption("Platform")
 
 player = Player(400, 300)
@@ -68,6 +92,8 @@ while True:
         player.move(-4, 0)
     if keys[pygame.K_RIGHT]:
         player.move(4, 0)
+
+    viewport.move(player)
 
     screen.fill((100, 100, 100))
 
