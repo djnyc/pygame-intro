@@ -21,15 +21,36 @@ class Block:
 class Player:
     def __init__(self, x, y):
         self.x, self.y = x, y
+        self.vx, self.vy = 0, 0
         self.r = 20
         self.color = (100, 0, 100)
+        self.g = 2
+        self.rect = None
+        self.ox, self.oy = None, None
 
     def draw(self):
-        pygame.draw.circle(screen, self.color, (self.x - viewport.x, self.y - viewport.y), self.r)
+        self.rect = pygame.draw.circle(screen, self.color, (self.x - viewport.x, self.y - viewport.y), self.r)
 
     def move(self, dx, dy):
-        self.x += dx
-        self.y += dy
+        self.vx = dx
+        self.vy = dy
+
+    def update(self):
+
+        self.ox, self.oy = self.x, self.y
+
+        self.x += self.vx
+        self.y += self.vy
+
+        self.vx = 0
+        self.vy += self.g
+
+    def revert(self):
+        self.x = self.ox
+        self.y = self.oy
+        self.vx = 0
+        self.vy = 0
+
 
 class Viewport:
     def __init__(self):
@@ -85,13 +106,13 @@ while True:
     keys = pygame.key.get_pressed()
 
     if keys[pygame.K_UP]:
-        player.move(0, -4)
+        player.move(0, -1)
     if keys[pygame.K_DOWN]:
-        player.move(0, 4)
+        player.move(0, 1)
     if keys[pygame.K_LEFT]:
-        player.move(-4, 0)
+        player.move(-1, 0)
     if keys[pygame.K_RIGHT]:
-        player.move(4, 0)
+        player.move(1, 0)
 
     viewport.move(player)
 
@@ -101,5 +122,10 @@ while True:
         b.draw()
 
     player.draw()
+
+    player.update()
+
+    if player.rect.collidelist([b.rect for b in blocks]) != -1:
+        player.revert()
 
     pygame.display.flip()
